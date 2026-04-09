@@ -6,8 +6,8 @@ from dataclasses import dataclass
 @dataclass
 class Config:
     # === COMMUNICATION SETTINGS ===
-    TELEGRAM_BOT_TOKEN: str = "PASTE_YOUR_TOKEN_HERE"
-    TELEGRAM_CHAT_ID: str = "PASTE_YOUR_CHAT_ID_HERE"
+    TELEGRAM_BOT_TOKEN: str = "8673950449:AAGT9GTD9NM31CJY576iSM7cgD0o_SG-RQM"
+    TELEGRAM_CHAT_ID: str = "1530447839"
     
     # === HARDWARE PINS (GPIO BCM) ===
     # Optional buzzer for audio feedback
