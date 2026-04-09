@@ -1,0 +1,56 @@
+# Configuration with secrets
+config.py
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+emergency_env/
+venv/
+env/
+
+# Logs
+*.log
+*.txt
+
+# Recordings (optional - you might want to keep these local)
+recordings/*.mp4
+recordings/*.avi
+recordings/*.jpg
+recordings/*.png
+
+# VOSK models (auto-downloaded, too large for git)
+vosk-model-*/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
