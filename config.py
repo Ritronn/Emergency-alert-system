@@ -1,6 +1,5 @@
 """
 Configuration settings for the Emergency Assistance System
-EXAMPLE FILE - Copy to config.py and update with your values
 """
 from dataclasses import dataclass
 
