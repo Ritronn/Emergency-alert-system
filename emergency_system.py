@@ -20,7 +20,7 @@ from typing import Optional
 # Import our modules
 from config import Config
 from utils import setup_logging, log_emergency_event
-from sensors import UltrasonicSensor, VoiceDetector, FallDetector
+from sensors import VoiceDetector, FallDetector
 from communication import TelegramBot
 from recording import CameraRecorder
 
@@ -70,7 +70,6 @@ class EmergencySystem:
         # Initialize components
         self.telegram_bot = None
         self.camera_recorder = None
-        self.ultrasonic_sensor = None
         self.voice_detector = None
         self.fall_detector = None
         
@@ -98,7 +97,6 @@ class EmergencySystem:
             self.camera_recorder = CameraRecorder(self.config, self.logger)
             
             # Initialize sensors
-            self.ultrasonic_sensor = UltrasonicSensor(self.config, self.logger)
             self.voice_detector = VoiceDetector(self.config, self.logger)
             self.fall_detector = FallDetector(self.config, self.logger)
             
@@ -117,15 +115,14 @@ class EmergencySystem:
         self.is_running = True
         
         try:
-            # Start all sensors
-            self.ultrasonic_sensor.start_monitoring(self._proximity_alert)
+            # Start sensors
             self.voice_detector.start_listening(self._voice_emergency, self._voice_confirmation)
             self.fall_detector.start_monitoring(self._fall_detected)
             
             # Send startup notification
             self.telegram_bot.send_system_status("started", {
                 "Location": "Emergency monitoring active",
-                "Sensors": "Voice, Fall, Proximity",
+                "Sensors": "Voice, Fall Detection",
                 "Recording": "Ready"
             })
             
@@ -146,9 +143,7 @@ class EmergencySystem:
         self.is_running = False
         
         try:
-            # Stop all sensors
-            if self.ultrasonic_sensor:
-                self.ultrasonic_sensor.stop_monitoring()
+            # Stop sensors
             if self.voice_detector:
                 self.voice_detector.stop_listening()
             if self.fall_detector:
@@ -207,19 +202,6 @@ class EmergencySystem:
         
         # Falls require confirmation but auto-confirm if no response
         self._trigger_emergency("fall", requires_confirmation=True, auto_confirm=True)
-    
-    def _proximity_alert(self, level: str, distance: float):
-        """Handle proximity alerts"""
-        self.logger.warning(f"Proximity alert: {level} at {distance} cm")
-        
-        # Send proximity notification (not full emergency)
-        details = {
-            "level": level,
-            "distance": distance,
-            "location": "Staircase area"
-        }
-        
-        self.telegram_bot.send_emergency_alert("proximity", details)
     
     def _trigger_emergency(self, source: str, requires_confirmation: bool = True, auto_confirm: bool = False):
         """
@@ -373,8 +355,6 @@ class EmergencySystem:
         self.stop_monitoring()
         
         # Clean up components
-        if self.ultrasonic_sensor:
-            self.ultrasonic_sensor.cleanup()
         if self.voice_detector:
             self.voice_detector.cleanup()
         if self.fall_detector:
@@ -422,7 +402,6 @@ def main():
         print("Features:")
         print("  - Voice Commands: Say 'help help help' 3 times (VOSK offline)")
         print("  - Fall Detection: Automatic detection via sensor")
-        print("  - Proximity Alerts: Staircase safety monitoring")
         print("  - Video Recording: 30-second emergency capture")
         print("  - Telegram Alerts: Real-time notifications")
         print("=" * 60)

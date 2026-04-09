@@ -13,10 +13,6 @@ class Config:
     TELEGRAM_CHAT_ID: str = "PASTE_YOUR_CHAT_ID_HERE"
     
     # === HARDWARE PINS (GPIO BCM) ===
-    # Ultrasonic sensor (from your staircase project)
-    ULTRASONIC_TRIG: int = 17
-    ULTRASONIC_ECHO: int = 27
-    
     # Optional buzzer for audio feedback
     BUZZER: int = 19
     
@@ -30,11 +26,6 @@ class Config:
     # Fall detection (accelerometer/gyroscope)
     FALL_THRESHOLD: float = 2.5  # g-force
     FALL_TIME_WINDOW: float = 0.5  # seconds
-    
-    # Proximity detection (ultrasonic)
-    DANGER_ZONE_CM: int = 80
-    WARNING_ZONE_CM: int = 150
-    READINGS_TO_CONFIRM: int = 3
     
     # === RECORDING SETTINGS ===
     RECORDING_DURATION: int = 30  # seconds

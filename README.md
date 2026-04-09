@@ -6,7 +6,6 @@ A comprehensive emergency detection and response system that provides multiple w
 
 - **Voice-Activated Emergency**: Say "help help help" 3 times to trigger (VOSK offline recognition)
 - **Fall Detection**: Automatic detection using MPU6050 gyroscope/accelerometer
-- **Proximity Monitoring**: Ultrasonic sensor for staircase safety
 - **30-Second Video Recording**: Automatic video capture during emergencies
 - **Telegram Alerts**: Real-time notifications with location and status
 - **Confirmation System**: 10-second timer to prevent false alarms
@@ -24,7 +23,6 @@ A comprehensive emergency detection and response system that provides multiple w
 - **USB Camera**: Any USB webcam or Raspberry Pi Camera Module
 - **USB Microphone**: For voice detection (VOSK offline recognition)
 - **MPU6050**: Gyroscope/accelerometer for fall detection (I2C)
-- **HC-SR04**: Ultrasonic sensor for proximity detection
 
 ### Wiring Connections
 
@@ -33,15 +31,12 @@ GPIO Connections (BCM numbering):
 ┌─────────────────────────────────────┐
 │ Component        │ GPIO Pin         │
 ├─────────────────────────────────────┤
-│ Ultrasonic TRIG │ GPIO 17           │
-│ Ultrasonic ECHO │ GPIO 27           │
 │ MPU6050 SDA     │ GPIO 2 (I2C)      │
 │ MPU6050 SCL     │ GPIO 3 (I2C)      │
 └─────────────────────────────────────┘
 
 Power Connections:
 • 3.3V: MPU6050 VCC
-• 5V: Ultrasonic sensor VCC
 • GND: All components ground
 ```
 
@@ -109,7 +104,6 @@ sudo systemctl start emergency-system
 
 1. **Voice Commands**: Say "help help help" clearly (3 times)
 2. **Fall Detection**: System automatically detects falls
-3. **Proximity Alert**: Warns when someone approaches staircase edge
 
 ### Confirmation Process
 
@@ -158,11 +152,6 @@ CONFIRMATION_TIMEOUT = 10      # Confirmation time (seconds)
 # Fall detection
 FALL_THRESHOLD = 2.5          # G-force threshold
 FALL_TIME_WINDOW = 0.5        # Detection window (seconds)
-
-# Proximity detection (from your staircase project)
-DANGER_ZONE_CM = 80           # Immediate danger distance
-WARNING_ZONE_CM = 150         # Warning distance
-READINGS_TO_CONFIRM = 3       # Readings needed to confirm
 ```
 
 ### Hardware Pins
@@ -171,8 +160,7 @@ Adjust GPIO pin assignments in `config.py`:
 
 ```python
 # Hardware pins (GPIO BCM numbering)
-ULTRASONIC_TRIG = 17
-ULTRASONIC_ECHO = 27
+BUZZER = 19  # Optional buzzer for audio feedback
 ```
 
 ## Project Structure
@@ -187,7 +175,6 @@ emergency_system/
 ├── README.md                    # This file
 ├── sensors/                     # Sensor modules
 │   ├── __init__.py
-│   ├── ultrasonic.py           # Proximity detection
 │   ├── voice_detector.py       # English voice recognition (VOSK)
 │   ├── voice_detector_hindi.py # Hindi voice recognition (VOSK)
 │   └── fall_detector.py        # Fall detection
