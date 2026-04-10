@@ -14,9 +14,11 @@ try:
     import vosk
     import pyaudio
     VOSK_AVAILABLE = True
-except ImportError:
-    print("WARNING: VOSK libraries not installed")
-    print("Run: pip install vosk pyaudio")
+    print("VOSK offline speech recognition available")
+except ImportError as e:
+    print(f"WARNING: VOSK libraries not available: {e}")
+    print("Voice detection will be disabled")
+    print("To fix: pip install vosk pyaudio")
     VOSK_AVAILABLE = False
     vosk = None
     pyaudio = None
@@ -117,6 +119,11 @@ class VoiceDetector:
             keyword_callback: Function called when emergency keywords detected
             confirmation_callback: Function called when confirmation received
         """
+        if not VOSK_AVAILABLE:
+            self.logger.error("Cannot start voice detection - VOSK not available")
+            self.logger.error("Voice detection is disabled")
+            return
+        
         if not self.model or not self.recognizer:
             self.logger.error("Cannot start voice detection - VOSK not initialized")
             return

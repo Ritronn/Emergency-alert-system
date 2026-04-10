@@ -116,13 +116,18 @@ class EmergencySystem:
         
         try:
             # Start sensors
-            self.voice_detector.start_listening(self._voice_emergency, self._voice_confirmation)
+            if self.voice_detector:
+                self.voice_detector.start_listening(self._voice_emergency, self._voice_confirmation)
+                sensors_list = "Voice, Fall Detection"
+            else:
+                sensors_list = "Fall Detection (Voice disabled)"
+                
             self.fall_detector.start_monitoring(self._fall_detected)
             
             # Send startup notification
             self.telegram_bot.send_system_status("started", {
                 "Location": "Emergency monitoring active",
-                "Sensors": "Voice, Fall Detection",
+                "Sensors": sensors_list,
                 "Recording": "Ready"
             })
             
@@ -400,7 +405,7 @@ def main():
         print("EMERGENCY ASSISTANCE SYSTEM STARTING")
         print("=" * 60)
         print("Features:")
-        print("  - Voice Commands: Say 'help help help' 3 times (VOSK offline)")
+        print("  - Voice Commands: Say 'help help help' 3 times (VOSK offline) - May be disabled if VOSK unavailable")
         print("  - Fall Detection: Automatic detection via sensor")
         print("  - Video Recording: 30-second emergency capture")
         print("  - Telegram Alerts: Real-time notifications")
