@@ -246,7 +246,7 @@ class EmergencySystem:
         self.logger.warning(f"Fall detected: {source}")
         
         # Falls require confirmation but auto-confirm if no response
-        self._trigger_emergency("fall", requires_confirmation=True, auto_confirm=True)
+        self._trigger_emergency("fall", requires_confirmation=True, auto_confirm=False)
     
     def _check_perimeter(self):
         """Check if user has exceeded the geofence perimeter"""

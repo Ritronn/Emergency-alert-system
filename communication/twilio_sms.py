@@ -51,33 +51,30 @@ class TwilioSMS:
     
     def send_message(self, message: str) -> bool:
         """
-        Send an SMS to all emergency contacts.
+        Print SMS message to terminal instead of sending via Twilio
+        (Twilio disabled to save credits)
         
         Args:
-            message: Message text to send
+            message: Message text to display
             
         Returns:
-            True if at least one message sent successfully
+            True (always succeeds for terminal output)
         """
         if not self.to_phones:
             self.logger.error("No emergency contacts configured")
             return False
         
-        success_count = 0
+        print("\n" + "="*60)
+        print("SMS MESSAGE (Twilio disabled - terminal output only)")
+        print("="*60)
+        print(f"To: {', '.join(self.to_phones)}")
+        print(f"From: {self.from_phone}")
+        print("-"*60)
+        print(message)
+        print("="*60 + "\n")
         
-        for phone in self.to_phones:
-            try:
-                msg = self.client.messages.create(
-                    body=message,
-                    from_=self.from_phone,
-                    to=phone
-                )
-                self.logger.info(f"SMS sent to {phone} (SID: {msg.sid})")
-                success_count += 1
-            except Exception as e:
-                self.logger.error(f"Failed to send SMS to {phone}: {e}")
-        
-        return success_count > 0
+        self.logger.info(f"SMS message logged to terminal (Twilio disabled)")
+        return True
     
     def send_emergency_alert(self, alert_type: str, details: Dict[str, Any]) -> bool:
         """
