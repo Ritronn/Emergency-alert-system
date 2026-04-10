@@ -5,7 +5,7 @@ A comprehensive emergency detection and response system that provides multiple w
 ## Features
 
 - **Voice-Activated Emergency**: Say "help help help" 3 times to trigger (VOSK offline recognition)
-- **Fall Detection**: Automatic detection using MPU6050 gyroscope/accelerometer
+- **Fall Detection**: Automatic detection using QYF0900 accelerometer with ADS1115 ADC
 - **30-Second Video Recording**: Automatic video capture during emergencies
 - **Telegram Alerts**: Real-time notifications with location and status
 - **Confirmation System**: 10-second timer to prevent false alarms
@@ -22,7 +22,8 @@ A comprehensive emergency detection and response system that provides multiple w
 ### Sensors and Modules
 - **USB Camera**: Any USB webcam or Raspberry Pi Camera Module
 - **USB Microphone**: For voice detection (VOSK offline recognition)
-- **MPU6050**: Gyroscope/accelerometer for fall detection (I2C)
+- **QYF0900**: Accelerometer for fall detection (analog output)
+- **ADS1115**: 16-bit ADC for reading QYF0900 analog signals (I2C)
 
 ### Wiring Connections
 
@@ -31,13 +32,20 @@ GPIO Connections (BCM numbering):
 ┌─────────────────────────────────────┐
 │ Component        │ GPIO Pin         │
 ├─────────────────────────────────────┤
-│ MPU6050 SDA     │ GPIO 2 (I2C)      │
-│ MPU6050 SCL     │ GPIO 3 (I2C)      │
+│ ADS1115 SDA     │ GPIO 2 (I2C)      │
+│ ADS1115 SCL     │ GPIO 3 (I2C)      │
 └─────────────────────────────────────┘
 
 Power Connections:
-• 3.3V: MPU6050 VCC
+• 3.3V: ADS1115 VDD
 • GND: All components ground
+
+QYF0900 to ADS1115 Connections:
+• QYF0900 X-axis → ADS1115 A0
+• QYF0900 Y-axis → ADS1115 A1  
+• QYF0900 Z-axis → ADS1115 A2
+• QYF0900 VCC → 3.3V
+• QYF0900 GND → GND
 ```
 
 ## Installation
@@ -219,7 +227,7 @@ sudo raspi-config
 
 # Check connected devices
 sudo i2cdetect -y 1
-# Should show device at address 0x68 (MPU6050)
+# Should show device at address 0x48 (ADS1115)
 ```
 
 **Audio issues:**
@@ -253,6 +261,9 @@ python -c "from sensors import VoiceDetector; print('Voice detection available')
 
 # Test camera
 python -c "import cv2; print('Camera available:', cv2.VideoCapture(0).isOpened())"
+
+# Test QYF0900 fall detector
+python -c "from sensors import FallDetector; print('Fall detection available')"
 ```
 
 ## Safety and Legal Considerations
