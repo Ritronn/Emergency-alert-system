@@ -19,19 +19,19 @@ def test_send_sms():
         client = Client(ACCOUNT_SID, AUTH_TOKEN)
 
         message = client.messages.create(
-            body="🚨 Emergency System Test - Twilio SMS is working!",
+            body="EMERGENCY ALERT - Emergency System Test - Twilio SMS is working!",
             from_=TWILIO_PHONE,
             to=TO_PHONE,
         )
 
-        print(f"✅ SMS sent successfully!")
+        print(f"SMS sent successfully!")
         print(f"   Message SID: {message.sid}")
         print(f"   Status: {message.status}")
         print(f"   From: {TWILIO_PHONE}")
         print(f"   To: {TO_PHONE}")
 
     except Exception as e:
-        print(f"❌ Failed to send SMS: {e}")
+        print(f"Failed to send SMS: {e}")
 
 if __name__ == "__main__":
     print("=" * 50)

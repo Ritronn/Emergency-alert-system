@@ -250,9 +250,9 @@ class GPSSensor:
             maps_link = details["maps_link"]
             
             text = (
-                f"📍 GPS Location: {lat:.6f}, {lon:.6f}\n"
-                f"📡 Satellites: {sats}\n"
-                f"🗺️ Map: {maps_link}"
+                f"GPS Location: {lat:.6f}, {lon:.6f}\n"
+                f"Satellites: {sats}\n"
+                f"Map: {maps_link}"
             )
             
             if details.get("altitude") is not None:

@@ -78,8 +78,8 @@ class TelegramBot:
         
         if alert_type == "voice":
             message = (
-                f"🚨 EMERGENCY ALERT - Voice Command\n\n"
-                f"🕐 Time: {timestamp}\n"
+                f"EMERGENCY ALERT - Voice Command\n\n"
+                f"Time: {timestamp}\n"
                 f"Trigger: Voice command detected\n"
                 f"Status: Waiting for confirmation\n\n"
                 f"{gps_info}\n\n" if gps_info else ""
@@ -88,13 +88,13 @@ class TelegramBot:
         
         elif alert_type == "fall":
             message = (
-                f"🚨 EMERGENCY ALERT - Fall Detected\n\n"
-                f"🕐 Time: {timestamp}\n"
+                f"EMERGENCY ALERT - Fall Detected\n\n"
+                f"Time: {timestamp}\n"
                 f"Trigger: Fall detection sensor\n"
                 f"Impact: {details.get('impact', 'Unknown')} g-force\n"
                 f"Recording: {details.get('recording_status', 'Starting...')}\n\n"
                 f"{gps_info}\n\n"
-                f"⚠️ IMMEDIATE ATTENTION REQUIRED"
+                f"IMMEDIATE ATTENTION REQUIRED"
             )
         
         elif alert_type == "proximity":
@@ -117,21 +117,21 @@ class TelegramBot:
         
         elif alert_type == "button":
             message = (
-                f"🚨 EMERGENCY ALERT - Manual Trigger\n\n"
-                f"🕐 Time: {timestamp}\n"
+                f"EMERGENCY ALERT - Manual Trigger\n\n"
+                f"Time: {timestamp}\n"
                 f"Trigger: Emergency button pressed\n"
                 f"Recording: {details.get('recording_status', 'Starting...')}\n\n"
                 f"{gps_info}\n\n"
-                f"⚠️ IMMEDIATE ATTENTION REQUIRED"
+                f"IMMEDIATE ATTENTION REQUIRED"
             )
         
         else:
             message = (
-                f"🚨 EMERGENCY ALERT\n\n"
-                f"🕐 Time: {timestamp}\n"
+                f"EMERGENCY ALERT\n\n"
+                f"Time: {timestamp}\n"
                 f"Type: {alert_type}\n\n"
                 f"{gps_info}\n\n"
-                f"⚠️ Please check the situation immediately."
+                f"Please check the situation immediately."
             )
         
         return self.send_message(message)

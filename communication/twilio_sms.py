@@ -97,14 +97,14 @@ class TwilioSMS:
         
         if alert_type == "voice":
             message = (
-                f"🚨 EMERGENCY - Voice Command\n"
+                f"EMERGENCY - Voice Command\n"
                 f"Time: {timestamp}\n"
                 f"User said the emergency keyword.\n"
             )
         
         elif alert_type == "fall":
             message = (
-                f"🚨 EMERGENCY - Fall Detected\n"
+                f"EMERGENCY - Fall Detected\n"
                 f"Time: {timestamp}\n"
                 f"Impact: {details.get('impact', 'High')}\n"
                 f"Recording: {details.get('recording_status', 'Started')}\n"
@@ -112,7 +112,7 @@ class TwilioSMS:
         
         elif alert_type == "button":
             message = (
-                f"🚨 EMERGENCY - Panic Button\n"
+                f"EMERGENCY - Panic Button\n"
                 f"Time: {timestamp}\n"
                 f"Manual emergency trigger pressed.\n"
             )
@@ -120,14 +120,14 @@ class TwilioSMS:
         elif alert_type == "perimeter_breach":
             distance = details.get('distance_km', '?')
             message = (
-                f"⚠️ PERIMETER ALERT\n"
+                f"PERIMETER ALERT\n"
                 f"Time: {timestamp}\n"
                 f"User is {distance:.1f} km away from safe zone.\n"
             )
         
         else:
             message = (
-                f"🚨 EMERGENCY ALERT\n"
+                f"EMERGENCY ALERT\n"
                 f"Time: {timestamp}\n"
                 f"Type: {alert_type}\n"
             )
@@ -136,7 +136,7 @@ class TwilioSMS:
         if gps_info:
             message += f"\n{gps_info}"
         
-        message += "\n⚠️ IMMEDIATE ATTENTION REQUIRED"
+        message += "\nIMMEDIATE ATTENTION REQUIRED"
         
         return self.send_message(message)
     
@@ -158,7 +158,7 @@ class TwilioSMS:
         }
         
         title = status_messages.get(status, f"System: {status}")
-        message = f"ℹ️ {title}"
+        message = f"INFO: {title}"
         
         if details:
             for key, value in details.items():
