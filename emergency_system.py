@@ -20,7 +20,7 @@ from typing import Optional
 # Import our modules
 from config import Config
 from utils import setup_logging, log_emergency_event
-from sensors import VoiceDetector, FallDetector
+from sensors import VoiceDetector, FallDetector, GPSSensor
 from communication import TelegramBot
 from recording import CameraRecorder
 
@@ -72,6 +72,7 @@ class EmergencySystem:
         self.camera_recorder = None
         self.voice_detector = None
         self.fall_detector = None
+        self.gps_sensor = None
         
         # System state
         self.is_running = False
@@ -100,6 +101,18 @@ class EmergencySystem:
             self.voice_detector = VoiceDetector(self.config, self.logger)
             self.fall_detector = FallDetector(self.config, self.logger)
             
+            # Initialize GPS sensor
+            try:
+                self.gps_sensor = GPSSensor(self.logger)
+                if self.gps_sensor.start():
+                    self.logger.info("GPS sensor started successfully")
+                else:
+                    self.logger.warning("GPS sensor failed to start - location will be unavailable")
+                    self.gps_sensor = None
+            except Exception as e:
+                self.logger.warning(f"GPS sensor not available: {e}")
+                self.gps_sensor = None
+            
             self.logger.info("All components initialized successfully")
             
         except Exception as e:
@@ -124,12 +137,8 @@ class EmergencySystem:
                 
             self.fall_detector.start_monitoring(self._fall_detected)
             
-            # Send startup notification
-            self.telegram_bot.send_system_status("started", {
-                "Location": "Emergency monitoring active",
-                "Sensors": sensors_list,
-                "Recording": "Ready"
-            })
+            # Log startup (terminal only, no Telegram)
+            self.logger.info(f"System started - Sensors: {sensors_list}, Recording: Ready")
             
             self.logger.info("Emergency monitoring started - all systems active")
             
@@ -162,8 +171,8 @@ class EmergencySystem:
             if self.confirmation_timer:
                 self.confirmation_timer.cancel()
             
-            # Send shutdown notification
-            self.telegram_bot.send_system_status("stopped")
+            # Log shutdown (terminal only, no Telegram)
+            self.logger.info("Emergency monitoring system stopped")
             
             self.logger.info("Emergency monitoring stopped")
             
@@ -237,8 +246,8 @@ class EmergencySystem:
                 "auto_confirm": auto_confirm
             }
             
-            # Send confirmation prompt
-            self.telegram_bot.send_confirmation_prompt(self.config.CONFIRMATION_TIMEOUT)
+            # Log confirmation prompt (terminal only, no Telegram)
+            self.logger.info(f"Emergency detected! Say 'YES' to confirm or wait {self.config.CONFIRMATION_TIMEOUT}s to cancel")
             
             # Start confirmation timer
             self.confirmation_timer = threading.Timer(
@@ -261,7 +270,7 @@ class EmergencySystem:
         source = self.pending_emergency["source"]
         self.pending_emergency = None
         
-        self.telegram_bot.send_system_status("confirmation_received")
+        self.logger.info("Emergency confirmed by user")
         self._execute_emergency(source)
     
     def _confirmation_timeout(self):
@@ -279,7 +288,6 @@ class EmergencySystem:
         else:
             # Cancel for voice commands
             self.logger.info(f"Emergency cancelled due to timeout: {source}")
-            self.telegram_bot.send_system_status("alert_cancelled")
         
         self.pending_emergency = None
     
@@ -300,9 +308,22 @@ class EmergencySystem:
         else:
             recording_status = "Not available"
         
+        # Get GPS location
+        gps_location_text = ""
+        maps_link = None
+        if self.gps_sensor and self.gps_sensor.has_fix:
+            gps_location_text = self.gps_sensor.get_emergency_location_text()
+            maps_link = self.gps_sensor.get_google_maps_link()
+            self.logger.info(f"GPS location included: {maps_link}")
+        else:
+            gps_location_text = "📍 GPS Location: Unavailable (no satellite fix)"
+            self.logger.warning("GPS fix not available for emergency alert")
+        
         # Prepare emergency details
+        location_str = maps_link if maps_link else "Home - Emergency System"
         details = {
-            "location": "Home - Emergency System",
+            "location": location_str,
+            "gps_info": gps_location_text,
             "recording_status": recording_status,
             "recording_path": recording_path,
             "timeout": self.config.CONFIRMATION_TIMEOUT
@@ -364,6 +385,8 @@ class EmergencySystem:
             self.voice_detector.cleanup()
         if self.fall_detector:
             self.fall_detector.cleanup()
+        if self.gps_sensor:
+            self.gps_sensor.cleanup()
         if self.camera_recorder:
             self.camera_recorder.cleanup()
         
@@ -407,6 +430,7 @@ def main():
         print("Features:")
         print("  - Voice Commands: Say 'help help help' 3 times (VOSK offline) - May be disabled if VOSK unavailable")
         print("  - Fall Detection: Automatic detection via sensor")
+        print("  - GPS Location: Google Maps link with emergency alerts")
         print("  - Video Recording: 30-second emergency capture")
         print("  - Telegram Alerts: Real-time notifications")
         print("=" * 60)
