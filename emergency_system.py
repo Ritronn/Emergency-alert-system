@@ -1,15 +1,5 @@
-"""
-Main Emergency Assistance System for Raspberry Pi
 
-A comprehensive emergency detection and response system that provides:
-- Voice-activated emergency detection ("help help help")
-- Fall detection using accelerometer/gyroscope
-- Proximity detection using ultrasonic sensor
-- Manual emergency button
-- 30-second video recording during emergencies
-- Telegram alerts with location and status
-"""
-
+import os
 import signal
 import sys
 import time
@@ -21,7 +11,7 @@ from typing import Optional
 from config import Config
 from utils import setup_logging, log_emergency_event
 from sensors import VoiceDetector, FallDetector, GPSSensor
-from communication import TelegramBot
+from communication import TwilioSMS, SupabaseClient
 from recording import CameraRecorder
 
 try:
@@ -68,7 +58,7 @@ class EmergencySystem:
             sys.exit(1)
         
         # Initialize components
-        self.telegram_bot = None
+        self.sms_client = None
         self.camera_recorder = None
         self.voice_detector = None
         self.fall_detector = None
@@ -79,6 +69,16 @@ class EmergencySystem:
         self.confirmation_timer = None
         self.pending_emergency = None
         
+        # Geofencing state
+        self.safe_zone_lat = None
+        self.safe_zone_lon = None
+        self.safe_zone_radius_km = self.config.SAFE_ZONE_RADIUS_KM
+        self.last_perimeter_alert_time = None
+        self.perimeter_alert_interval = self.config.PERIMETER_ALERT_INTERVAL
+        
+        # Supabase client
+        self.supabase = None
+        
         # Initialize all components
         self._initialize_components()
         
@@ -87,10 +87,38 @@ class EmergencySystem:
     def _initialize_components(self):
         """Initialize all system components"""
         try:
-            # Initialize Telegram bot
-            self.telegram_bot = TelegramBot(
-                self.config.TELEGRAM_BOT_TOKEN,
-                self.config.TELEGRAM_CHAT_ID,
+            # Initialize Supabase client and fetch dynamic data
+            emergency_contacts = [self.config.DEFAULT_EMERGENCY_PHONE]  # fallback
+            try:
+                self.supabase = SupabaseClient(
+                    self.config.SUPABASE_URL,
+                    self.config.SUPABASE_KEY,
+                    self.logger
+                )
+                data = self.supabase.fetch_all()
+                
+                # Update contacts from Supabase
+                if data["contacts"]:
+                    emergency_contacts = data["contacts"]
+                else:
+                    self.logger.warning("No contacts from Supabase, using default")
+                
+                # Set safe zone from Supabase
+                if data["safe_location"]:
+                    self.safe_zone_lat, self.safe_zone_lon = data["safe_location"]
+                    self.logger.info(f"Geofence set: {self.safe_zone_lat:.6f}, {self.safe_zone_lon:.6f} (radius: {self.safe_zone_radius_km}km)")
+                else:
+                    self.logger.warning("No safe location from Supabase - geofencing disabled")
+                    
+            except Exception as e:
+                self.logger.warning(f"Supabase unavailable, using defaults: {e}")
+            
+            # Initialize Twilio SMS client with contacts
+            self.sms_client = TwilioSMS(
+                self.config.TWILIO_ACCOUNT_SID,
+                self.config.TWILIO_AUTH_TOKEN,
+                self.config.TWILIO_PHONE,
+                emergency_contacts,
                 self.logger
             )
             
@@ -185,8 +213,11 @@ class EmergencySystem:
         
         try:
             while self.is_running:
-                # Simple monitoring loop - sensors run in their own threads
-                time.sleep(3)  # Check every 3 seconds
+                # Check geofence perimeter
+                self._check_perimeter()
+                
+                # Sensors run in their own threads
+                time.sleep(5)  # Check every 5 seconds
                 
         except KeyboardInterrupt:
             self.logger.info("Shutdown requested by user")
@@ -216,6 +247,50 @@ class EmergencySystem:
         
         # Falls require confirmation but auto-confirm if no response
         self._trigger_emergency("fall", requires_confirmation=True, auto_confirm=True)
+    
+    def _check_perimeter(self):
+        """Check if user has exceeded the geofence perimeter"""
+        # Skip if no safe zone is configured or no GPS
+        if not self.safe_zone_lat or not self.safe_zone_lon:
+            return
+        if not self.gps_sensor or not self.gps_sensor.has_fix:
+            return
+        
+        distance_km = self.gps_sensor.distance_from(self.safe_zone_lat, self.safe_zone_lon)
+        if distance_km is None:
+            return
+        
+        # Check if outside safe zone
+        if distance_km > self.safe_zone_radius_km:
+            current_time = time.time()
+            
+            # Only alert if: first time OR 30 min since last alert
+            should_alert = (
+                self.last_perimeter_alert_time is None or
+                (current_time - self.last_perimeter_alert_time) >= self.perimeter_alert_interval
+            )
+            
+            if should_alert:
+                self.last_perimeter_alert_time = current_time
+                self.logger.warning(f"PERIMETER BREACH: {distance_km:.1f} km from safe zone")
+                
+                # Build alert details with location
+                gps_text = self.gps_sensor.get_emergency_location_text()
+                maps_link = self.gps_sensor.get_google_maps_link()
+                
+                details = {
+                    "distance_km": distance_km,
+                    "gps_info": gps_text,
+                    "location": maps_link or "Unknown",
+                }
+                
+                # Send directly — no confirmation needed for perimeter breach
+                self.sms_client.send_emergency_alert("perimeter_breach", details)
+        else:
+            # Back inside safe zone — reset the alert timer
+            if self.last_perimeter_alert_time is not None:
+                self.logger.info("User returned to safe zone")
+                self.last_perimeter_alert_time = None
     
     def _trigger_emergency(self, source: str, requires_confirmation: bool = True, auto_confirm: bool = False):
         """
@@ -334,7 +409,7 @@ class EmergencySystem:
             details["impact"] = "High"  # Could be actual sensor reading
         
         # Send emergency alert
-        self.telegram_bot.send_emergency_alert(source, details)
+        self.sms_client.send_emergency_alert(source, details)
         
         # Send recording when complete (in background)
         if recording_path:
@@ -360,17 +435,13 @@ class EmergencySystem:
                 break
             time.sleep(1)
         
-        # Send recording if it exists
+        # Send recording notification if it exists
         if recording_path and os.path.exists(recording_path):
-            caption = f"Emergency Recording - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
-            
-            if self.telegram_bot.send_video(recording_path, caption):
-                self.telegram_bot.send_system_status("recording_completed", {
-                    "File": os.path.basename(recording_path),
-                    "Size": f"{os.path.getsize(recording_path)} bytes"
-                })
-            else:
-                self.logger.error("Failed to send emergency recording")
+            self.sms_client.send_system_status("recording_completed", {
+                "File": os.path.basename(recording_path),
+                "Size": f"{os.path.getsize(recording_path)} bytes"
+            })
+            self.logger.info(f"Recording saved: {recording_path}")
         else:
             self.logger.error("Recording file not found or recording failed")
     
@@ -428,11 +499,18 @@ def main():
         print("EMERGENCY ASSISTANCE SYSTEM STARTING")
         print("=" * 60)
         print("Features:")
-        print("  - Voice Commands: Say 'help help help' 3 times (VOSK offline) - May be disabled if VOSK unavailable")
+        print("  - Voice Commands: Say 'help help help' 3 times (VOSK offline)")
         print("  - Fall Detection: Automatic detection via sensor")
         print("  - GPS Location: Google Maps link with emergency alerts")
         print("  - Video Recording: 30-second emergency capture")
-        print("  - Telegram Alerts: Real-time notifications")
+        print("  - SMS Alerts: Real-time Twilio SMS notifications")
+        print("  - Supabase: Dynamic contacts & safe locations")
+        
+        if emergency_system.safe_zone_lat:
+            print(f"  - Geofencing: {emergency_system.safe_zone_radius_km}km radius | Alert every 30min")
+        else:
+            print("  - Geofencing: Disabled (no safe location set)")
+        
         print("=" * 60)
         print("Press Ctrl+C to stop")
         print("=" * 60)

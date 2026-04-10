@@ -262,6 +262,50 @@ class GPSSensor:
         else:
             return "📍 GPS Location: Unavailable (no satellite fix)"
     
+    @staticmethod
+    def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        """
+        Calculate distance between two GPS coordinates using Haversine formula.
+        
+        Args:
+            lat1, lon1: First point coordinates
+            lat2, lon2: Second point coordinates
+            
+        Returns:
+            Distance in kilometers
+        """
+        import math
+        
+        R = 6371.0  # Earth's radius in km
+        
+        lat1_r = math.radians(lat1)
+        lat2_r = math.radians(lat2)
+        dlat = math.radians(lat2 - lat1)
+        dlon = math.radians(lon2 - lon1)
+        
+        a = (math.sin(dlat / 2) ** 2 +
+             math.cos(lat1_r) * math.cos(lat2_r) * math.sin(dlon / 2) ** 2)
+        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        
+        return R * c
+    
+    def distance_from(self, target_lat: float, target_lon: float) -> Optional[float]:
+        """
+        Calculate distance from current position to a target point.
+        
+        Args:
+            target_lat: Target latitude
+            target_lon: Target longitude
+            
+        Returns:
+            Distance in km, or None if no GPS fix
+        """
+        location = self.get_location()
+        if location:
+            lat, lon = location
+            return self.haversine_distance(lat, lon, target_lat, target_lon)
+        return None
+    
     def cleanup(self):
         """Clean up GPS resources"""
         self.stop()

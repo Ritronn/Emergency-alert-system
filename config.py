@@ -6,8 +6,25 @@ from dataclasses import dataclass
 @dataclass
 class Config:
     # === COMMUNICATION SETTINGS ===
-    TELEGRAM_BOT_TOKEN: str = "8673950449:AAGT9GTD9NM31CJY576iSM7cgD0o_SG-RQM"
-    TELEGRAM_CHAT_ID: str = "1530447839"
+    # Twilio SMS
+    TWILIO_ACCOUNT_SID: str = "YOUR_TWILIO_ACCOUNT_SID"
+    TWILIO_AUTH_TOKEN: str = "YOUR_TWILIO_AUTH_TOKEN"
+    TWILIO_PHONE: str = "+16626322267"
+    
+    # Default emergency contact (fallback if Supabase is unavailable)
+    DEFAULT_EMERGENCY_PHONE: str = "+917498683368"
+    
+    # Supabase (for dynamic contacts & safe locations)
+    SUPABASE_URL: str = "https://ohwmquomashztbjqeqcn.supabase.co"
+    SUPABASE_KEY: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9od21xdW9tYXNoenRianFlcWNuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNjI1ODAsImV4cCI6MjA5MDYzODU4MH0.C6K9GiEk4eZtcDswzHTd8-Ki3tT0d-0aobw4xOt-jjY"
+    
+    # Geofencing
+    SAFE_ZONE_RADIUS_KM: float = 5.0  # km
+    PERIMETER_ALERT_INTERVAL: int = 1800  # 30 minutes in seconds
+    
+    # Legacy Telegram (kept for reference)
+    # TELEGRAM_BOT_TOKEN: str = "8673950449:AAGT9GTD9NM31CJY576iSM7cgD0o_SG-RQM"
+    # TELEGRAM_CHAT_ID: str = "1530447839"
     
     # === HARDWARE PINS (GPIO BCM) ===
     # Optional buzzer for audio feedback
@@ -50,12 +67,12 @@ class Config:
     
     def validate(self) -> bool:
         """Validate configuration settings"""
-        if self.TELEGRAM_BOT_TOKEN == "PASTE_YOUR_TOKEN_HERE":
-            print("WARNING: Telegram bot token not configured!")
+        if not self.TWILIO_ACCOUNT_SID or self.TWILIO_ACCOUNT_SID == "PASTE_YOUR_SID_HERE":
+            print("WARNING: Twilio Account SID not configured!")
             return False
             
-        if self.TELEGRAM_CHAT_ID == "PASTE_YOUR_CHAT_ID_HERE":
-            print("WARNING: Telegram chat ID not configured!")
+        if not self.TWILIO_AUTH_TOKEN or self.TWILIO_AUTH_TOKEN == "PASTE_YOUR_TOKEN_HERE":
+            print("WARNING: Twilio Auth Token not configured!")
             return False
             
         return True
