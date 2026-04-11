@@ -26,7 +26,7 @@ from communication import TwilioSMS, SupabaseClient
 from utils import setup_logging
 
 # --- Configuration ---
-BUTTON_PIN = 13          # GPIO BCM pin for button input
+BUTTON_PIN = 27          # GPIO 27 (BCM) = physical pin 13
 DOUBLE_PRESS_WINDOW = 1.0  # Max seconds between two presses
 DEBOUNCE_MS = 200        # Debounce time in milliseconds
 COOLDOWN = 30            # Seconds before another alert can be sent
