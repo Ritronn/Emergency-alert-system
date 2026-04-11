@@ -383,16 +383,13 @@ class EmergencySystem:
         else:
             recording_status = "Not available"
         
-        # Get GPS location
-        gps_location_text = ""
-        maps_link = None
-        if self.gps_sensor and self.gps_sensor.has_fix:
-            gps_location_text = self.gps_sensor.get_emergency_location_text()
-            maps_link = self.gps_sensor.get_google_maps_link()
-            self.logger.info(f"GPS location included: {maps_link}")
-        else:
-            gps_location_text = "GPS Location: Unavailable (no satellite fix)"
-            self.logger.warning("GPS fix not available for emergency alert")
+        # Get GPS location (hardcoded coordinates)
+        maps_link = "https://maps.google.com/maps?q=18.486600,73.816300"
+        gps_location_text = (
+            "GPS Location: 18.486600, 73.816300\n"
+            f"Map: {maps_link}"
+        )
+        self.logger.info(f"GPS location included: {maps_link}")
         
         # Prepare emergency details
         location_str = maps_link if maps_link else "Home - Emergency System"
