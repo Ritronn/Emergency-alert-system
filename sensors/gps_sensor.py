@@ -256,11 +256,11 @@ class GPSSensor:
             )
             
             if details.get("altitude") is not None:
-                text += f"\n📏 Altitude: {details['altitude']:.1f}m"
+                text += f"\nAltitude: {details['altitude']:.1f}m"
             
             return text
         else:
-            return "📍 GPS Location: Unavailable (no satellite fix)"
+            return "GPS Location: Unavailable (no satellite fix)"
     
     @staticmethod
     def haversine_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

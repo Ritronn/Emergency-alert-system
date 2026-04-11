@@ -391,7 +391,7 @@ class EmergencySystem:
             maps_link = self.gps_sensor.get_google_maps_link()
             self.logger.info(f"GPS location included: {maps_link}")
         else:
-            gps_location_text = "📍 GPS Location: Unavailable (no satellite fix)"
+            gps_location_text = "GPS Location: Unavailable (no satellite fix)"
             self.logger.warning("GPS fix not available for emergency alert")
         
         # Prepare emergency details
