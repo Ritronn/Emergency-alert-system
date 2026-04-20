@@ -384,9 +384,9 @@ class EmergencySystem:
             recording_status = "Not available"
         
         # Get GPS location (hardcoded coordinates)
-        maps_link = "https://maps.google.com/maps?q=18.486600,73.816300"
+        maps_link = "https://maps.google.com/maps?q=18.463690,73.86750"
         gps_location_text = (
-            "GPS Location: 18.486600, 73.816300\n"
+            "GPS Location: 18.463690,73.86750\n"
             f"Map: {maps_link}"
         )
         self.logger.info(f"GPS location included: {maps_link}")
