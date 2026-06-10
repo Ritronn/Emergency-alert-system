@@ -1,7 +1,6 @@
 # Emergency Assistance System for Raspberry Pi
 
 A comprehensive emergency detection and response system that provides multiple ways to trigger emergency alerts and automatically records evidence.
-
 ## Features
 
 - **Voice-Activated Emergency**: Say "help help help" 3 times to trigger (VOSK offline recognition)
